@@ -135,6 +135,14 @@ QLabel {
     color: #a0aec0;
 }
 
+/* "Image Segmentation"*/
+QLabel#lbl_title {
+    font-size: 19px;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 0px;
+}
+
 /* "No Image Loaded"*/
 QLabel#lbl_no_image {
     color: #8c9bae;
