@@ -56,7 +56,7 @@ Aplicația pune accent pe un flux de lucru nativ, bazându-se pe ghidarea stări
   - `Reset Canvas`: Golește complet masca curentă
   - `Save Mask`: Exportă masca creată în formatul ales
 
-### 2. Feedback-ul oferit Utilizatorului
+### 2. Feedback-ul oferit utilizatorului
 
 - **Micro-interacțiuni și Hover:** Butoanele își schimbă culoarea, conturul și curbura bordurii la trecerea mouse-ului și la apăsare
 - **Afișare dinamică a instrumentului activ:** Butonul uneltei selectate își inversează unghiurile rotunjite și primește un contur albastru aprins
@@ -66,11 +66,11 @@ Aplicația pune accent pe un flux de lucru nativ, bazându-se pe ghidarea stări
   - *Freehand:* Linie de contur în culoarea clasei active în timpul desenării continue
 - **Controlul stării butoanelor (Enabled/Disabled):**
   - Butoanele `Undo`, `Reset Canvas`, `Save Mask` și acțiunile pe clase sunt dezactivate vizual și funcțional atunci când acțiunile respective nu sunt posibile
-- **Overlay Semitransparent:** Transparență calibrată la aprox. 43% (110/255), permițând utilizatorului să vedă concomitent detaliile imaginii originale și aria măștilor colorate
+- **Overlay Semitransparent:** Transparență calibrată la aprox. 43% , permițând utilizatorului să vedă concomitent detaliile imaginii originale și aria măștilor colorate
 
 ---
 
-## Formate de Export ale Măștii
+## Formate de export ale măștii
 
 În modul **Classic**, masca binară simplă (0/255) poate fi salvată în formatele standard `JPG`, `PNG` sau `BMP`
 
@@ -82,7 +82,7 @@ In modul **Multi-class**, aplicația oferă 3 opțiuni de export prin filtrarea 
 
 ---
 
-## Logica din Spatele Instrumentelor (Tools Architecture)
+## Logica din spatele instrumentelor (Tools Architecture)
 
 Arhitectura este separată în două fișiere principale (`main.py` pentru UI/Control și `canvas.py` pentru grafică/procesare)
 
@@ -93,16 +93,16 @@ Pentru a permite aplicarea corectă a formelor pe clase diferite fără coliziun
 - **Logică interacțiune:** Sistem de trasare în **2 click-uri** (Click 1: colț/punct de start, Click 2: colț opus / dimensiune finală)
 - **Generare mască:** Calculul dreptunghiului normalizat și rasterizarea pe stamp cu `QPainter`
 
-### 3. Poligon / Linii Frânte
+### 3. Poligon (Lines)
 - **Logică interacțiune:** Adăugare secvențială de puncte la fiecare click
 - **Închidere automată:** Dacă un click este efectuat la o distanță mai mică de 12 px față de primul punct introdus (nodul de origine) și există cel puțin 3 puncte, poligonul se închide automat și umple interiorul
 - **Generare mască:** Folosește `QPainterPath` pentru a crea o cale închisă umplută complet
 
-### 4. Desen Liber (Freehand)
+### 4. Desen liber (Freehand)
 - **Logică interacțiune:** Înregistrare continuă pe evenimentul `mouseMoveEvent` atâta timp cât butonul stânga al mouse-ului este menținut apăsat
 - **Generare mască:** Reține traseul sub formă de vector de segmente `QPainterPath` și îl rasterizează folosind un penel cu capete și îmbinări rotunjite (`RoundCap`, `RoundJoin`) pentru evitarea fragmentării
 
-### 5. Umplere Regiune (Bucket Fill)
+### 5. Umplere regiune (Bucket Fill)
 - **Algoritm:** **Scanline Flood Fill** optimizat pe buffer `NumPy`
 - **Cum funcționează:**
   1. La click, se citește eticheta pixelului apăsat direct din array-ul NumPy
