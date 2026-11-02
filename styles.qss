@@ -178,3 +178,80 @@ QSlider::handle:horizontal {
 QSlider::handle:horizontal:hover {
     background: #66b3ff;
 }
+/* lista claselor din panoul din dreapta */
+QListWidget#class_list {
+    background-color: #1e222b;
+    border: 1px solid #3d4659;
+    border-radius: 8px;
+    padding: 4px;
+    outline: none;
+}
+
+QListWidget#class_list::item {
+    padding: 6px 4px;
+    border-radius: 6px;
+    color: #e0e6ed;
+}
+
+QListWidget#class_list::item:hover {
+    background-color: #2a2f3d;
+}
+
+/* clasa activa cu care se deseneaza */
+QListWidget#class_list::item:selected {
+    background-color: #2d384d;
+    border: 1px solid #4da6ff;
+    color: #4da6ff;
+    font-weight: bold;
+}
+
+/* campul de editare la redenumirea unei clase */
+QListWidget#class_list QLineEdit {
+    background-color: #12151c;
+    border: 1px solid #4da6ff;
+    border-radius: 4px;
+    color: #ffffff;
+}
+
+/* butoanele de gestionare a claselor */
+QPushButton#btn_class_action {
+    border-radius: 10px;
+    font-size: 13px;
+    padding: 4px 10px;
+}
+
+QPushButton#btn_class_action:disabled {
+    background-color: #20242c;
+    border: 1px solid #292e38;
+    color: #606773;
+}
+
+/* textul de ajutor de sub lista claselor */
+QLabel#lbl_hint {
+    color: #6c7686;
+    font-size: 11px;
+}
+
+/* comutatorul de mod (Classic / Multi-class)*/
+QPushButton#btn_mode_option {
+    background-color: #1e222b;
+    border: 1.5px solid #3d4659;
+    border-radius: 10px;
+    color: #a0aec0;
+    font-size: 13px;
+    padding: 0px 8px;
+}
+
+QPushButton#btn_mode_option:hover {
+    background-color: #2a2f3d;
+    border-color: #4da6ff;
+    color: #ffffff;
+}
+
+/* modul activ */
+QPushButton#btn_mode_option:checked {
+    background-color: #2d384d;
+    border: 2px solid #4da6ff;
+    color: #4da6ff;
+    font-weight: bold;
+}
