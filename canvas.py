@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene
 
 # paleta implicita de culori atribuita pe rand claselor noi
 DEFAULT_CLASS_COLORS = [
-    QColor(255, 0, 0), QColor(0, 200, 0), QColor(0, 120, 255), QColor(255, 210, 0),
+    QColor(255, 255, 0), QColor(0, 200, 0), QColor(0, 120, 255), QColor(255, 210, 0),
     QColor(255, 0, 255), QColor(0, 230, 230), QColor(255, 128, 0), QColor(150, 60, 255),
     QColor(160, 255, 60), QColor(255, 110, 170)]
 
@@ -59,14 +59,13 @@ class SegmentationCanvas(QGraphicsView):
         self.history_stack = []
         self.main_window = None
 
-        # lista claselor
-        self.classes = []
-        self.active_class_id = None
-        self.add_class()
-
-        # modul curent si starea salvata (masca, istoric, clase) a modului inactiv
         self.mode = MODE_CLASSIC
         self.mode_states = {}
+
+        # lista claselor (initializata cu rosu pentru modul clasic)
+        self.classes = []
+        self.active_class_id = None
+        self.add_class(name="Mask", color=QColor(255, 0, 0))
 
         # starile curente ale uneltelor
         self.current_tool = 'rectangle'
