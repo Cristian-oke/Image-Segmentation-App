@@ -183,14 +183,14 @@ QListWidget#class_list {
     background-color: #1e222b;
     border: 1px solid #3d4659;
     border-radius: 8px;
-    padding: 4px;
+    padding: 2px;
     outline: none;
 }
 
 QListWidget#class_list::item {
-    padding: 6px 4px;
+    padding: 0px;
+    margin: 1px 0px;
     border-radius: 6px;
-    color: #e0e6ed;
 }
 
 QListWidget#class_list::item:hover {
@@ -226,12 +226,6 @@ QPushButton#btn_class_action:disabled {
     color: #606773;
 }
 
-/* textul de ajutor de sub lista claselor */
-QLabel#lbl_hint {
-    color: #6c7686;
-    font-size: 11px;
-}
-
 /* comutatorul de mod (Classic / Multi-class)*/
 QPushButton#btn_mode_option {
     background-color: #1e222b;
@@ -254,4 +248,85 @@ QPushButton#btn_mode_option:checked {
     border: 2px solid #4da6ff;
     color: #4da6ff;
     font-weight: bold;
+}
+
+/*custom MessaheBox */
+QWidget#dlg_container {
+    background-color: #1e222b;
+    border: 5px solid #c1cfdd;
+    border-radius: 14px;
+}
+
+/*stilat ca QGroupBox::title*/
+QLabel#dlg_title_badge {
+    color: #4da6ff;
+    background-color: #1e222b;
+    border: 1px solid #3d4659;
+    border-radius: 6px;
+    padding: 4px 16px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QLabel#dlg_msg {
+    color: #e0e6ed;
+    font-size: 14px;
+}
+
+QPushButton#btn_close_x {
+    background-color: transparent;
+    color: #ff4d4d;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0px;
+}
+
+QPushButton#btn_close_x:hover {
+    color: #ff6666;
+    background-color: #2a2f3d;
+    border-radius: 16px;
+}
+
+QPushButton#btn_dialog_action {
+    background-color: #2d3342;
+    border: 1px solid #4da6ff;
+    border-radius: 19px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QPushButton#btn_dialog_action:hover {
+    background-color: #3b4356;
+    border-color: #ffffff;
+}
+
+QPushButton#btn_dialog_action:pressed {
+    background-color: #1f242e;
+}
+
+QPushButton#btn_class_pencil {
+    background-color: transparent;
+    border: none;
+    color: #4da6ff;
+    font-size: 13px;
+    padding: 0px;
+}
+
+QPushButton#btn_class_pencil:hover {
+    background-color: #2d384d;
+    color: #66b3ff;
+    border-radius: 4px;
+}
+
+/*campul de editare nume */
+QLineEdit#txt_class_rename {
+    background-color: #12151c;
+    border: 1px solid #4da6ff;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 0px 4px;
+    margin: 0px;
 }
