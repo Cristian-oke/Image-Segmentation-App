@@ -5,8 +5,8 @@ import json
 from PyQt6.QtCore import Qt, QTimer, QSize
 from PyQt6.QtGui import QIcon, QColor,QPixmap, QPainter, QPen, QPainterPath
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QButtonGroup, QSlider, QLabel, QFileDialog, QMessageBox, QGroupBox,
-    QListWidget, QListWidgetItem, QColorDialog)
+                             QPushButton, QButtonGroup, QSlider, QLabel, QFileDialog, QGroupBox,
+                             QListWidget, QListWidgetItem, QColorDialog, QDialog, QLineEdit,QToolButton)
 from canvas import SegmentationCanvas, MODE_CLASSIC, MODE_MULTI
 
 # extensiile acceptate la incarcare
@@ -18,6 +18,173 @@ EXPORT_FILTERS = {
     "Color mask - fiecare clasa cu culoarea ei (*.png *.bmp)": 'color',
     "Label mask - pixel = indexul clasei (*.png *.bmp)": 'label',
     "Binary mask per clasa - cate un fisier 0/255 (*.png *.bmp)": 'binary'}
+
+
+class CustomMessageBox(QDialog):
+    """MesageBox Custom"""
+
+    def __init__(self, parent, title, message, mode="info"):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setFixedWidth(460)
+        self.result_value = False
+
+        # layout-ul radacina al dialogului
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(0, 14, 0, 0)  # Spațiu sus pentru ca badge-ul titlului să iasă peste bordură
+
+        # containerul principal cu bordura
+        container = QWidget(self)
+        container.setObjectName("dlg_container")
+        root_layout.addWidget(container)
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(20, 20, 20, 24)
+        layout.setSpacing(18)
+
+        # butonul X rosu din coltul dreapta-sus
+        btn_x = QPushButton("✕", container)
+        btn_x.setObjectName("btn_close_x")
+        btn_x.setFixedSize(32, 32)
+        btn_x.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_x.clicked.connect(self.reject)
+
+        #badge-ul pentru titlu
+        lbl_title = QLabel(title, self)
+        lbl_title.setObjectName("dlg_title_badge")
+        lbl_title.adjustSize()
+
+        def position_overlays():
+            # titlul centrat pe linia superioara
+            lbl_title.adjustSize()
+            tx = (self.width() - lbl_title.width()) // 2
+            lbl_title.move(tx, 2)
+            lbl_title.raise_()
+            btn_x.move(container.width() - 40, 10)
+            btn_x.raise_()
+
+        QTimer.singleShot(0, position_overlays)
+        layout.addSpacing(10)
+
+        #mesajul text centrat
+        lbl_msg = QLabel(message)
+        lbl_msg.setObjectName("dlg_msg")
+        lbl_msg.setWordWrap(True)
+        lbl_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(lbl_msg)
+
+        btn_layout = QHBoxLayout()
+        btn_ok = QPushButton("OK")
+        btn_ok.setObjectName("btn_dialog_action")
+        btn_ok.setFixedHeight(38)
+        btn_ok.setFixedWidth(100)
+        btn_ok.setCursor(Qt.CursorShape.PointingHandCursor)
+        def on_ok_clicked():
+            self.result_value = True
+            self.accept()
+
+        btn_ok.clicked.connect(on_ok_clicked)
+        btn_layout.addWidget(btn_ok, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        layout.addLayout(btn_layout)
+
+    @staticmethod
+    def show_info(parent, title, message):
+        dlg = CustomMessageBox(parent, title, message, mode="info")
+        dlg.exec()
+
+    @staticmethod
+    def show_critical(parent, title, message):
+        dlg = CustomMessageBox(parent, title, message, mode="critical")
+        dlg.exec()
+
+    @staticmethod
+    def ask_question(parent, title, message):
+        dlg = CustomMessageBox(parent, title, message, mode="question")
+        dlg.exec()
+        return dlg.result_value
+
+
+class ClassItemWidget(QWidget):
+    """widget personalizat pentru randurile din lista de clase cu bifa rotundă vectoriala"""
+    def __init__(self, class_data, color_icon, parent_window):
+        super().__init__()
+        self.class_data = class_data
+        self.parent_window = parent_window
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(6, 2, 6, 2)
+        layout.setSpacing(6)
+        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        #buton bifa rotunda
+        self.btn_check = QToolButton()
+        self.btn_check.setFixedSize(22, 22)
+        self.btn_check.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_check.setStyleSheet("background: transparent; border: none;")
+        self.btn_check.clicked.connect(self.toggle_visibility)
+        self.update_icon()
+        layout.addWidget(self.btn_check)
+
+        self.lbl_icon = QLabel()
+        self.lbl_icon.setFixedSize(18, 18)
+        self.lbl_icon.setPixmap(color_icon.pixmap(18, 18))
+        layout.addWidget(self.lbl_icon)
+
+        self.lbl_name = QLabel(class_data['name'])
+        self.lbl_name.setStyleSheet("color: #e0e6ed; font-weight: 500;")
+        layout.addWidget(self.lbl_name, stretch=1)
+
+        #QLineEdit pentru editare
+        self.txt_edit = QLineEdit(class_data['name'])
+        self.txt_edit.setObjectName("txt_class_rename")
+        self.txt_edit.setFixedHeight(26)
+        self.txt_edit.setVisible(False)
+        self.txt_edit.returnPressed.connect(self.commit_edit)
+        layout.addWidget(self.txt_edit, stretch=1)
+
+        #buton edit
+        self.btn_pencil = QToolButton()
+        self.btn_pencil.setObjectName("btn_class_pencil")
+        self.btn_pencil.setFixedSize(24, 24)
+        self.btn_pencil.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_pencil.setStyleSheet("background: transparent; border: none; padding: 0px;")
+        self.btn_pencil.setIcon(self.parent_window.create_pencil_icon(size=18))
+        self.btn_pencil.setIconSize(QSize(18, 18))
+        self.btn_pencil.clicked.connect(self.start_edit)
+        layout.addWidget(self.btn_pencil)
+
+    def update_icon(self):
+        """schimba pictograma intre cerc alb si bifa albastra"""
+        icon = self.parent_window.create_checkbox_icon(checked=self.class_data['visible'], size=18)
+        self.btn_check.setIcon(icon)
+        self.btn_check.setIconSize(QSize(22, 22))
+
+    def toggle_visibility(self):
+        self.class_data['visible'] = not self.class_data['visible']
+        self.update_icon()
+        self.parent_window.canvas.on_classes_changed()
+
+    def start_edit(self):
+        self.lbl_name.hide()
+        self.btn_pencil.hide()
+        self.txt_edit.setText(self.class_data['name'])
+        self.txt_edit.show()
+        self.txt_edit.setFocus()
+        self.txt_edit.selectAll()
+
+    def commit_edit(self):
+        new_name = self.txt_edit.text().strip()
+        if new_name:
+            self.class_data['name'] = new_name
+            self.lbl_name.setText(new_name)
+        else:
+            self.txt_edit.setText(self.class_data['name'])
+
+        self.txt_edit.hide()
+        self.lbl_name.show()
+        self.btn_pencil.show()
 
 
 class MainWindow(QMainWindow):
@@ -192,10 +359,6 @@ class MainWindow(QMainWindow):
         self.class_list.itemChanged.connect(self.on_class_item_changed)
         classes_layout.addWidget(self.class_list)
 
-        lbl_hint = QLabel("Double-click to rename\nCheckbox = show / hide on canvas")
-        lbl_hint.setObjectName("lbl_hint")
-        classes_layout.addWidget(lbl_hint)
-
         # butoane de gestionare a claselor
         class_buttons_row = QHBoxLayout()
         self.btn_add_class = QPushButton("Add")
@@ -312,7 +475,7 @@ class MainWindow(QMainWindow):
 
     def load_image_file(self, file_path):
         if not self.canvas.load_image(file_path):
-            QMessageBox.critical(self,"Eroare","Imaginea nu s-a putut încărca")
+            CustomMessageBox.show_critical(self, "Error", "The image could not be loaded")
 
     def dropped_image_path(self, event):
         """returneaza primul fisier imagine local din datele trase cu mouse-ul sau None"""
@@ -382,23 +545,49 @@ class MainWindow(QMainWindow):
         return QIcon(pixmap)
 
     def refresh_class_list(self):
-        """reconstruieste lista de clase din canvas (nume, culoare, vizibilitate, clasa activa)"""
+        """reconstruieste lista de clase folosind widget-uri izolate ClassItemWidget cu dimensiune fixa per rand"""
         self.class_list.blockSignals(True)
         self.class_list.clear()
         active_row = 0
 
         for row, c in enumerate(self.canvas.classes):
-            item = QListWidgetItem(self.create_color_icon(c['color']), c['name'])
+            item = QListWidgetItem(self.class_list)
             item.setData(Qt.ItemDataRole.UserRole, c['id'])
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked if c['visible'] else Qt.CheckState.Unchecked)
+
+            #instanțiere widget rand
+            row_widget = ClassItemWidget(c, self.create_color_icon(c['color']), self)
+
+            item.setSizeHint(QSize(0, 36))
             self.class_list.addItem(item)
+            self.class_list.setItemWidget(item, row_widget)
+
             if c['id'] == self.canvas.active_class_id:
                 active_row = row
-
         self.class_list.setCurrentRow(active_row)
         self.class_list.blockSignals(False)
         self.update_button_states()
+
+    def on_add_class(self):
+        """adauga o clasa noua si deschide automat editarea numelui"""
+        new_class = self.canvas.add_class()
+        if new_class is None:
+            return
+        self.refresh_class_list()
+        self.canvas.update_canvas_overlay()
+
+        #pornire automata redenumire pentru clasa adaugata
+        last_item = self.class_list.item(self.class_list.count() - 1)
+        if last_item:
+            widget = self.class_list.itemWidget(last_item)
+            if isinstance(widget, ClassItemWidget):
+                widget.start_edit()
+
+    def on_class_visibility_toggled(self, class_id, visible):
+        """trateaza bifarea/debifarea vizibilitatii unei clase"""
+        c = self.canvas.get_class(class_id)
+        if c and c['visible'] != visible:
+            c['visible'] = visible
+            self.canvas.on_classes_changed()
 
     def on_class_selected(self, row):
         """seteaza clasa activa la selectarea unui rand din lista"""
@@ -429,24 +618,16 @@ class MainWindow(QMainWindow):
             c['visible'] = visible
             self.canvas.on_classes_changed()
 
-    def on_add_class(self):
-        """adauga o clasa noua cu urmatoarea culoare din paleta si o selecteaza pentru redenumire"""
-        if self.canvas.add_class() is None:
-            return
-        self.refresh_class_list()
-        self.canvas.update_canvas_overlay()
-        self.class_list.editItem(self.class_list.currentItem())
-
     def on_remove_class(self):
-        """sterge clasa activa impreuna cu pixelii ei """
+        """sterge clasa activa impreuna cu pixelii ei"""
         c = self.canvas.get_class(self.canvas.active_class_id)
         if c is None:
             return
 
         if self.canvas.class_has_pixels(c['id']):
-            answer = QMessageBox.question(self, "Ștergere clasă",
-                f"Ștergeți clasa „{c['name']}” și toți pixelii ei de pe mască?")
-            if answer != QMessageBox.StandardButton.Yes:
+            confirmed = CustomMessageBox.ask_question(self, "Delete class",
+                f"Delete class „{c['name']}” and all its pixels from the mask?")
+            if not confirmed:
                 return
 
         self.canvas.remove_class(c['id'])
@@ -497,10 +678,74 @@ class MainWindow(QMainWindow):
         painter.end()
         return QIcon(pixmap)
 
+    def create_checkbox_icon(self, checked=False, size=22):
+        """genereaza pictograma rotunda vectoriala:
+        cerc alb cu bordura albastru pentru checked și pentru unchecked
+        bifa fiind desenata doar la checked"""
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        main_color = QColor("#1e40af")
+
+        #fond alb interior identic pentru ambele stari
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor("#ffffff"))
+        painter.drawEllipse(1, 1, size - 2, size - 2)
+
+        #inel exterior albastru inchis identic pentru ambele stari
+        painter.setPen(QPen(main_color, 2.6))
+        painter.drawEllipse(1, 1, size - 2, size - 2)
+
+        # bifa din centru se desenează doar la Checked
+        if checked:
+            pen_check = QPen(main_color, 2.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            painter.setPen(pen_check)
+            path = QPainterPath()
+            path.moveTo(size * 0.28, size * 0.52)
+            path.lineTo(size * 0.45, size * 0.70)
+            path.lineTo(size * 0.75, size * 0.32)
+            painter.drawPath(path)
+        painter.end()
+        return QIcon(pixmap)
+
+    def create_pencil_icon(self, color=QColor("#4da6ff"), size=18):
+        """genereaza o pictograma vectoriala de creion pt butonul de edit"""
+        pixmap = QPixmap(size, size)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen(color, 1.6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(QColor(color))
+
+        # varful triunghiular al creionului stanga jos
+        tip_path = QPainterPath()
+        tip_path.moveTo(3, 15)
+        tip_path.lineTo(3, 11)
+        tip_path.lineTo(7, 15)
+        tip_path.closeSubpath()
+        painter.drawPath(tip_path)
+
+        # corpul dreptunghiular
+        body_path = QPainterPath()
+        body_path.moveTo(4.5, 9.5)
+        body_path.lineTo(11.5, 2.5)
+        body_path.lineTo(15.5, 6.5)
+        body_path.lineTo(8.5, 13.5)
+        body_path.closeSubpath()
+        painter.drawPath(body_path)
+
+        painter.setPen(QPen(QColor("#1e222b"), 1.2))
+        painter.drawLine(10, 4, 14, 8)
+        painter.end()
+        return QIcon(pixmap)
+
     def export_classic_mask(self):
         """modul Classic: salveaza masca binara Grayscale8 (255 = selectat/alb, 0 = fundal/negru)"""
-        file_path, _ = QFileDialog.getSaveFileName(self,"Salvează Masca Binară","",
-            "Imagine PNG (*.png);;Imagine BMP (*.bmp)")
+        file_path, _ = QFileDialog.getSaveFileName(self,"Save Mask","",
+            "Image PNG (*.png);;Image BMP (*.bmp)")
 
         if not file_path:
             return
@@ -510,9 +755,9 @@ class MainWindow(QMainWindow):
             file_path = root + '.png'
 
         if self.canvas.class_binary_mask().save(file_path):
-            QMessageBox.information(self, "Succes", "Masca a fost salvată cu succes")
+            CustomMessageBox.show_info(self, "Success", "The mask was successfully saved")
         else:
-            QMessageBox.critical(self, "Eroare", "Eroare la salvarea fișierului")
+            CustomMessageBox.show_critical(self, "Error", "Error saving file")
 
     def on_export_mask(self):
         """deschide dialogul de salvare si exporta masca in formatul ales
@@ -525,7 +770,7 @@ class MainWindow(QMainWindow):
             self.export_classic_mask()
             return
 
-        file_path, selected_filter = QFileDialog.getSaveFileName(self, "Salvează Masca", "",
+        file_path, selected_filter = QFileDialog.getSaveFileName(self, "Save Mask", "",
             ";;".join(EXPORT_FILTERS))
 
         if not file_path:
@@ -563,9 +808,9 @@ class MainWindow(QMainWindow):
 
         if len(saved) >= expected:
             names = "\n".join(os.path.basename(p) for p in saved)
-            QMessageBox.information(self, "Succes", f"Masca a fost salvată cu succes!\n\n{names}")
+            CustomMessageBox.show_info(self, "Success", f"The mask was succesfully saved")
         else:
-            QMessageBox.critical(self, "Eroare", "Eroare la salvarea fișierului!")
+            CustomMessageBox.show_critical(self, "Erorr", "Error saving file")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
